@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TDEE Calculator — Free Daily Calorie & Macro Calculator</title>
+<meta name="description" content="Calculate your Total Daily Energy Expenditure (TDEE), BMR, BMI, and exact macros. The most accurate free calorie calculator for weight loss, maintenance, and muscle gain.">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --surface: #0d1320;
+  --surface2: #111827;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
+  --text: #f0f4ff;
+  --muted: #6b7a9a;
+  --accent: #4fffb0;
+  --accent2: #00d4ff;
+  --accent3: #ff6b6b;
+  --accent4: #ffd166;
+  --glow: rgba(79,255,176,0.15);
+  --glow2: rgba(0,212,255,0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BACKGROUND EFFECTS */
+.bg-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 20%, rgba(79,255,176,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(0,212,255,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 60% 10%, rgba(255,107,107,0.03) 0%, transparent 50%);
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* LAYOUT */
+.page-wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+/* ===== AD ZONES ===== */
+.ad-zone {
+  width: 100%;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.ad-zone-top {
+  height: 90px;
+  margin: 24px 0 0;
+}
+
+.ad-zone-mid {
+  height: 250px;
+  margin: 48px 0;
+}
+
+.ad-zone-bottom {
+  height: 90px;
+  margin: 48px 0 0;
+}
+
+/* HEADER */
+header {
+  padding: 56px 0 48px;
+  text-align: center;
+}
+
+.header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(79,255,176,0.08);
+  border: 1px solid rgba(79,255,176,0.2);
+  border-radius: 100px;
+  padding: 6px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 28px;
+}
+
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 6vw, 68px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+}
+
+h1 .grad {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-sub {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.7;
+  font-weight: 400;
+}
+
+/* UNIT TOGGLE */
+.unit-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  width: fit-content;
+  margin: 32px auto 0;
+}
+
+.unit-btn {
+  padding: 8px 28px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+
+.unit-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* MAIN CARD */
+.calc-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px;
+  margin-top: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.calc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.4;
+}
+
+/* FORM GRID */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full { grid-column: 1 / -1; }
+
+label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+input[type="number"] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 52px 14px 18px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: rgba(79,255,176,0.4);
+  box-shadow: 0 0 0 3px rgba(79,255,176,0.06);
+}
+
+.input-unit {
+  position: absolute;
+  right: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* GENDER SELECT */
+.gender-group {
+  display: flex;
+  gap: 12px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Manrope', sans-serif;
+}
+
+.gender-btn.active {
+  border-color: rgba(79,255,176,0.4);
+  background: rgba(79,255,176,0.06);
+  color: var(--accent);
+}
+
+/* SELECT */
+select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7a9a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  transition: border-color 0.2s;
+}
+
+select:focus {
+  outline: none;
+  border-color: rgba(79,255,176,0.4);
+}
+
+/* GOAL SELECTOR */
+.goal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.goal-btn {
+  padding: 14px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  font-family: 'Manrope', sans-serif;
+  line-height: 1.4;
+}
+
+.goal-btn .goal-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+.goal-btn.active-lose {
+  border-color: rgba(255,107,107,0.5);
+  background: rgba(255,107,107,0.08);
+  color: var(--accent3);
+}
+
+.goal-btn.active-maintain {
+  border-color: rgba(79,255,176,0.5);
+  background: rgba(79,255,176,0.08);
+  color: var(--accent);
+}
+
+.goal-btn.active-gain {
+  border-color: rgba(0,212,255,0.5);
+  background: rgba(0,212,255,0.08);
+  color: var(--accent2);
+}
+
+/* CALCULATE BUTTON */
+.calc-btn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  border: none;
+  border-radius: 14px;
+  color: var(--bg);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 28px;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.calc-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.calc-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(79,255,176,0.25);
+}
+
+.calc-btn:active { transform: translateY(0); }
+
+/* DIVIDER */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0 32px;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-divider span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* RESULTS */
+.results {
+  display: none;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.results.visible {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* MAIN RESULT */
+.main-result {
+  background: linear-gradient(135deg, rgba(79,255,176,0.06) 0%, rgba(0,212,255,0.06) 100%);
+  border: 1px solid rgba(79,255,176,0.2);
+  border-radius: 20px;
+  padding: 36px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-result::before {
+  content: '';
+  position: absolute;
+  top: -60px; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 120px;
+  background: radial-gradient(ellipse, rgba(79,255,176,0.1) 0%, transparent 70%);
+}
+
+.result-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.result-number {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(56px, 10vw, 88px);
+  font-weight: 800;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.result-unit {
+  font-size: 18px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.result-desc {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 12px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* STATS ROW */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-box-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat-box-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-box-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* CALORIE GOALS */
+.goals-section { margin-top: 32px; }
+
+.goals-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.goal-result {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.goal-result.highlighted {
+  border-color: rgba(79,255,176,0.3);
+  background: rgba(79,255,176,0.04);
+}
+
+.goal-result-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.goal-result-val {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.goal-result-val span {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+/* MACROS */
+.macros-section { margin-top: 32px; }
+
+.macros-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.macros-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.macro-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.macro-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.macro-card.protein::before { background: var(--accent2); }
+.macro-card.carbs::before { background: var(--accent4); }
+.macro-card.fat::before { background: var(--accent3); }
+
+.macro-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.macro-card.protein .macro-name { color: var(--accent2); }
+.macro-card.carbs .macro-name { color: var(--accent4); }
+.macro-card.fat .macro-name { color: var(--accent3); }
+
+.macro-grams {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text);
+}
+
+.macro-unit {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.macro-cals {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.macro-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.macro-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s ease;
+}
+
+.macro-card.protein .macro-bar-fill { background: var(--accent2); }
+.macro-card.carbs .macro-bar-fill { background: var(--accent4); }
+.macro-card.fat .macro-bar-fill { background: var(--accent3); }
+
+/* BMI SECTION */
+.bmi-section { margin-top: 32px; }
+
+.bmi-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.bmi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.bmi-value-wrap { }
+
+.bmi-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.bmi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bmi-category {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.bmi-scale {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4fffb0 0%, #00d4ff 25%, #ffd166 60%, #ff6b6b 100%);
+  overflow: visible;
+}
+
+.bmi-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  transition: left 0.8s ease;
+}
+
+.bmi-scale-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.bmi-scale-label {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* INFO SECTION */
+.info-section {
+  margin-top: 56px;
+}
+
+.info-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.info-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.info-card p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* FAQ */
+.faq-section { margin-top: 56px; }
+
+.faq-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 20px 0;
+  cursor: pointer;
+}
+
+.faq-q {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.faq-icon {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  color: var(--accent);
+  transition: transform 0.3s;
+}
+
+.faq-a {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s;
+}
+
+.faq-item.open .faq-a { max-height: 200px; padding-top: 14px; }
+.faq-item.open .faq-icon { transform: rotate(45deg); }
+
+/* FOOTER */
+footer {
+  margin-top: 80px;
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ERROR */
+.error-msg {
+  display: none;
+  color: var(--accent3);
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 12px;
+  text-align: center;
+  padding: 12px;
+  background: rgba(255,107,107,0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(255,107,107,0.15);
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .calc-card { padding: 24px 20px; }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-group.full { grid-column: 1; }
+  .goal-grid { grid-template-columns: repeat(2, 1fr); }
+  .goal-grid .goal-btn:last-child { grid-column: 1 / -1; }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stats-row .stat-box:last-child { grid-column: 1 / -1; }
+  .goals-grid { grid-template-columns: 1fr; }
+  .macros-grid { grid-template-columns: 1fr; }
+  .info-grid { grid-template-columns: 1fr; }
+  .bmi-top { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .ad-zone-mid { height: 120px; }
+}
+
+@media (max-width: 400px) {
+  h1 { font-size: 30px; }
+  .result-number { font-size: 52px; }
+}
+
+/* ANIMATE IN */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-badge { animation: fadeUp 0.6s 0.1s both; }
+h1 { animation: fadeUp 0.6s 0.2s both; }
+.header-sub { animation: fadeUp 0.6s 0.3s both; }
+.unit-toggle { animation: fadeUp 0.6s 0.4s both; }
+.calc-card { animation: fadeUp 0.6s 0.5s both; }
+</style>
+</head>
+<body>
+
+<div class="bg-mesh"></div>
+<div class="bg-grid"></div>
+
+<div class="page-wrap">
+
+  <!-- TOP AD -->
+  <div class="ad-zone ad-zone-top">
+    <!-- AdSense Ad Unit — 728x90 Leaderboard -->
+  </div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge"><div class="dot"></div> Free & Accurate</div>
+    <h1>TDEE & Calorie<br><span class="grad">Calculator</span></h1>
+    <p class="header-sub">Find your Total Daily Energy Expenditure, BMR, BMI and exact macros — using the most accurate Mifflin-St Jeor formula.</p>
+    <div class="unit-toggle">
+      <button class="unit-btn active" onclick="setUnit('metric')">Metric (kg/cm)</button>
+      <button class="unit-btn" onclick="setUnit('imperial')">Imperial (lb/in)</button>
+    </div>
+  </header>
+
+  <!-- CALCULATOR CARD -->
+  <div class="calc-card">
+
+    <!-- GENDER -->
+    <div class="form-group full" style="margin-bottom: 4px;">
+      <label>Biological Sex</label>
+      <div class="gender-group">
+        <button class="gender-btn active" id="btn-male" onclick="setGender('male')">♂ Male</button>
+        <button class="gender-btn" id="btn-female" onclick="setGender('female')">♀ Female</button>
+      </div>
+    </div>
+
+    <!-- INPUTS -->
+    <div class="form-grid" style="margin-top: 20px;">
+      <div class="form-group">
+        <label>Age</label>
+        <div class="input-wrap">
+          <input type="number" id="age" placeholder="25" min="10" max="100">
+          <span class="input-unit">yrs</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Weight</label>
+        <div class="input-wrap">
+          <input type="number" id="weight" placeholder="70" min="20" max="400">
+          <span class="input-unit" id="weight-unit">kg</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="height-group-metric">
+        <label>Height</label>
+        <div class="input-wrap">
+          <input type="number" id="height-cm" placeholder="175" min="100" max="250">
+          <span class="input-unit">cm</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="height-group-imperial" style="display:none;">
+        <label>Height</label>
+        <div style="display:flex;gap:8px;">
+          <div class="input-wrap" style="flex:1;">
+            <input type="number" id="height-ft" placeholder="5" min="3" max="8">
+            <span class="input-unit">ft</span>
+          </div>
+          <div class="input-wrap" style="flex:1;">
+            <input type="number" id="height-in" placeholder="9" min="0" max="11">
+            <span class="input-unit">in</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group full">
+        <label>Activity Level</label>
+        <select id="activity">
+          <option value="1.2">Sedentary — little or no exercise</option>
+          <option value="1.375">Lightly Active — exercise 1–3 days/week</option>
+          <option value="1.55" selected>Moderately Active — exercise 3–5 days/week</option>
+          <option value="1.725">Very Active — exercise 6–7 days/week</option>
+          <option value="1.9">Extra Active — physical job or 2x training/day</option>
+        </select>
+      </div>
+
+      <div class="form-group full">
+        <label>Your Goal</label>
+        <div class="goal-grid">
+          <button class="goal-btn" id="goal-lose-fast" onclick="setGoal('lose-fast')"><span class="goal-icon">🔥</span>Lose Fast<br><small style="font-size:10px;opacity:0.7;">−750 kcal</small></button>
+          <button class="goal-btn" id="goal-lose" onclick="setGoal('lose')"><span class="goal-icon">📉</span>Lose Weight<br><small style="font-size:10px;opacity:0.7;">−500 kcal</small></button>
+          <button class="goal-btn active-maintain" id="goal-maintain" onclick="setGoal('maintain')"><span class="goal-icon">⚖️</span>Maintain<br><small style="font-size:10px;opacity:0.7;">±0 kcal</small></button>
+          <button class="goal-btn" id="goal-gain" onclick="setGoal('gain')"><span class="goal-icon">💪</span>Gain Muscle<br><small style="font-size:10px;opacity:0.7;">+500 kcal</small></button>
+          <button class="goal-btn" id="goal-gain-fast" onclick="setGoal('gain-fast')" style="grid-column: span 2;"><span class="goal-icon">🚀</span>Gain Fast — +750 kcal</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error-msg" id="error-msg">Please fill in all fields correctly before calculating.</div>
+
+    <button class="calc-btn" onclick="calculate()">Calculate My TDEE & Macros →</button>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+      <div class="section-divider"><span>Your Results</span></div>
+
+      <!-- MAIN TDEE -->
+      <div class="main-result">
+        <div class="result-label">Your Daily Calories (TDEE)</div>
+        <div class="result-number" id="tdee-display">0</div>
+        <div class="result-unit">kcal / day</div>
+        <div class="result-desc" id="tdee-desc">Based on your activity level and goal.</div>
+      </div>
+
+      <!-- BMR + BMI + GOAL -->
+      <div class="stats-row" style="margin-top: 20px;">
+        <div class="stat-box">
+          <div class="stat-box-label">BMR</div>
+          <div class="stat-box-val" id="bmr-display">—</div>
+          <div class="stat-box-sub">kcal at rest</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">TDEE (Maintenance)</div>
+          <div class="stat-box-val" id="tdee-maintain-display">—</div>
+          <div class="stat-box-sub">kcal/day</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Goal Calories</div>
+          <div class="stat-box-val" id="goal-display">—</div>
+          <div class="stat-box-sub" id="goal-sub-display">kcal/day</div>
+        </div>
+      </div>
+
+      <!-- CALORIE TARGETS -->
+      <div class="goals-section">
+        <div class="goals-title">Calorie Targets by Goal</div>
+        <div class="goals-grid">
+          <div class="goal-result" id="gr-lose-fast"><div class="goal-result-name">🔥 Lose Fast</div><div class="goal-result-val" id="gv-lose-fast">— <span>kcal</span></div></div>
+          <div class="goal-result" id="gr-lose"><div class="goal-result-name">📉 Lose Weight</div><div class="goal-result-val" id="gv-lose">— <span>kcal</span></div></div>
+          <div class="goal-result" id="gr-maintain"><div class="goal-result-name">⚖️ Maintain</div><div class="goal-result-val" id="gv-maintain">— <span>kcal</span></div></div>
+          <div class="goal-result" id="gr-gain"><div class="goal-result-name">💪 Gain Muscle</div><div class="goal-result-val" id="gv-gain">— <span>kcal</span></div></div>
+        </div>
+      </div>
+
+      <!-- MACROS -->
+      <div class="macros-section">
+        <div class="macros-title">Daily Macros Breakdown</div>
+        <div class="macros-grid">
+          <div class="macro-card protein">
+            <div class="macro-name">Protein</div>
+            <div class="macro-grams" id="protein-g">—</div>
+            <div class="macro-unit">grams / day</div>
+            <div class="macro-cals" id="protein-kcal">— kcal</div>
+            <div class="macro-bar"><div class="macro-bar-fill" id="protein-bar" style="width:0%"></div></div>
+          </div>
+          <div class="macro-card carbs">
+            <div class="macro-name">Carbohydrates</div>
+            <div class="macro-grams" id="carbs-g">—</div>
+            <div class="macro-unit">grams / day</div>
+            <div class="macro-cals" id="carbs-kcal">— kcal</div>
+            <div class="macro-bar"><div class="macro-bar-fill" id="carbs-bar" style="width:0%"></div></div>
+          </div>
+          <div class="macro-card fat">
+            <div class="macro-name">Fat</div>
+            <div class="macro-grams" id="fat-g">—</div>
+            <div class="macro-unit">grams / day</div>
+            <div class="macro-cals" id="fat-kcal">— kcal</div>
+            <div class="macro-bar"><div class="macro-bar-fill" id="fat-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BMI -->
+      <div class="bmi-section">
+        <div class="bmi-card">
+          <div class="bmi-top">
+            <div class="bmi-value-wrap">
+              <div class="bmi-label">Body Mass Index (BMI)</div>
+              <div class="bmi-value" id="bmi-val">—</div>
+              <div class="bmi-category" id="bmi-cat">—</div>
+            </div>
+          </div>
+          <div class="bmi-scale">
+            <div class="bmi-marker" id="bmi-marker" style="left: 30%"></div>
+          </div>
+          <div class="bmi-scale-labels">
+            <span class="bmi-scale-label">Underweight<br>&lt;18.5</span>
+            <span class="bmi-scale-label">Normal<br>18.5–24.9</span>
+            <span class="bmi-scale-label">Overweight<br>25–29.9</span>
+            <span class="bmi-scale-label">Obese<br>30+</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /results -->
+  </div><!-- /calc-card -->
+
+  <!-- MID AD -->
+  <div class="ad-zone ad-zone-mid">
+    <!-- AdSense Ad Unit — 300x250 Rectangle -->
+  </div>
+
+  <!-- INFO SECTION -->
+  <div class="info-section">
+    <div class="info-title">How This Calculator Works</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <h3>What is TDEE?</h3>
+        <p>Your Total Daily Energy Expenditure is the total number of calories your body burns in a day, accounting for your activity level. It's the most important number for managing your weight.</p>
+      </div>
+      <div class="info-card">
+        <h3>What is BMR?</h3>
+        <p>Basal Metabolic Rate is the number of calories your body needs at complete rest — just to keep your organs functioning. We calculate it using the Mifflin-St Jeor equation, the most scientifically validated formula.</p>
+      </div>
+      <div class="info-card">
+        <h3>Mifflin-St Jeor Equation</h3>
+        <p>Men: BMR = (10 × kg) + (6.25 × cm) − (5 × age) + 5<br>Women: BMR = (10 × kg) + (6.25 × cm) − (5 × age) − 161<br><br>Your TDEE = BMR × activity multiplier.</p>
+      </div>
+      <div class="info-card">
+        <h3>How Are Macros Calculated?</h3>
+        <p>Protein is set at 2g per kg of bodyweight for optimal muscle retention. Fat covers 25% of total calories. Remaining calories are allocated to carbohydrates. This is a performance-based macro split.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-section">
+    <div class="faq-title">Frequently Asked Questions</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How accurate is this TDEE calculator? <div class="faq-icon">+</div></div>
+      <div class="faq-a">This calculator uses the Mifflin-St Jeor equation, which is considered the most accurate BMR formula for most people by registered dietitians. It's within ±10% for the majority of adults. For athletes or people with very high muscle mass, results may vary slightly.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How many calories should I eat to lose weight? <div class="faq-icon">+</div></div>
+      <div class="faq-a">A safe and sustainable calorie deficit for weight loss is 500 kcal below your TDEE, which typically results in around 0.5kg (1lb) per week of fat loss. Deficits larger than 750 kcal/day can cause muscle loss and are not recommended long-term.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What activity level should I choose? <div class="faq-icon">+</div></div>
+      <div class="faq-a">Choose "Sedentary" for desk jobs with no exercise. "Lightly Active" for 1-3 workouts per week. "Moderately Active" for 3-5 sessions. "Very Active" for daily intense training. Most people overestimate their activity level — when in doubt, go one level lower.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What is BMI and is it reliable? <div class="faq-icon">+</div></div>
+      <div class="faq-a">BMI (Body Mass Index) is a simple height-to-weight ratio. It's useful as a general health screening tool but doesn't account for muscle mass. Athletes often have a high BMI despite being very lean. Use it as a reference, not as a definitive health metric.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How often should I recalculate my TDEE? <div class="faq-icon">+</div></div>
+      <div class="faq-a">Recalculate every 4–6 weeks, or whenever your weight changes by more than 3–5kg. As you lose or gain weight, your BMR changes, so your calorie targets need to be updated for continued progress.</div>
+    </div>
+  </div>
+
+  <!-- BOTTOM AD -->
+  <div class="ad-zone ad-zone-bottom">
+    <!-- AdSense Ad Unit — 728x90 Leaderboard -->
+  </div>
+
+  <footer>
+    <p>© 2025 TDEE Calculator &nbsp;·&nbsp; Free, accurate, no account needed &nbsp;·&nbsp; Based on <a href="#">Mifflin-St Jeor formula</a></p>
+  </footer>
+
+</div><!-- /page-wrap -->
+
+<script>
+let unit = 'metric';
+let gender = 'male';
+let goal = 'maintain';
+
+function setUnit(u) {
+  unit = u;
+  document.querySelectorAll('.unit-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('weight-unit').textContent = u === 'metric' ? 'kg' : 'lb';
+  document.getElementById('height-group-metric').style.display = u === 'metric' ? '' : 'none';
+  document.getElementById('height-group-imperial').style.display = u === 'imperial' ? '' : 'none';
+}
+
+function setGender(g) {
+  gender = g;
+  document.getElementById('btn-male').classList.toggle('active', g === 'male');
+  document.getElementById('btn-female').classList.toggle('active', g === 'female');
+}
+
+function setGoal(g) {
+  goal = g;
+  const goals = ['lose-fast','lose','maintain','gain','gain-fast'];
+  goals.forEach(id => {
+    const btn = document.getElementById('goal-' + id);
+    btn.className = 'goal-btn';
+  });
+  const btn = document.getElementById('goal-' + g);
+  if (g.includes('lose')) btn.classList.add('active-lose');
+  else if (g === 'maintain') btn.classList.add('active-maintain');
+  else btn.classList.add('active-gain');
+}
+
+function getHeightCm() {
+  if (unit === 'metric') {
+    return parseFloat(document.getElementById('height-cm').value);
+  } else {
+    const ft = parseFloat(document.getElementById('height-ft').value) || 0;
+    const inch = parseFloat(document.getElementById('height-in').value) || 0;
+    return (ft * 12 + inch) * 2.54;
+  }
+}
+
+function getWeightKg() {
+  const w = parseFloat(document.getElementById('weight').value);
+  return unit === 'metric' ? w : w * 0.453592;
+}
+
+function calculate() {
+  const age = parseFloat(document.getElementById('age').value);
+  const weightKg = getWeightKg();
+  const heightCm = getHeightCm();
+  const activityMult = parseFloat(document.getElementById('activity').value);
+  const errorEl = document.getElementById('error-msg');
+
+  // Validation
+  if (!age || !weightKg || !heightCm || age < 10 || age > 100 || weightKg < 20 || heightCm < 100) {
+    errorEl.style.display = 'block';
+    setTimeout(() => errorEl.style.display = 'none', 4000);
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  // BMR — Mifflin-St Jeor
+  let bmr;
+  if (gender === 'male') {
+    bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) + 5;
+  } else {
+    bmr = (10 * weightKg) + (6.25 * heightCm) - (5 * age) - 161;
+  }
+
+  // TDEE
+  const tdee = bmr * activityMult;
+
+  // Goal calories
+  const goalOffsets = {
+    'lose-fast': -750,
+    'lose': -500,
+    'maintain': 0,
+    'gain': +500,
+    'gain-fast': +750
+  };
+
+  const goalCalories = tdee + goalOffsets[goal];
+
+  // Display TDEE = goal calories
+  document.getElementById('tdee-display').textContent = Math.round(goalCalories).toLocaleString();
+  document.getElementById('bmr-display').textContent = Math.round(bmr).toLocaleString();
+  document.getElementById('tdee-maintain-display').textContent = Math.round(tdee).toLocaleString();
+  document.getElementById('goal-display').textContent = Math.round(goalCalories).toLocaleString();
+
+  const goalLabels = {
+    'lose-fast': 'Fast loss (−750)',
+    'lose': 'Weight loss (−500)',
+    'maintain': 'Maintenance',
+    'gain': 'Muscle gain (+500)',
+    'gain-fast': 'Fast gain (+750)'
+  };
+  document.getElementById('goal-sub-display').textContent = goalLabels[goal];
+
+  // TDEE desc
+  const descs = {
+    'lose-fast': 'Aggressive deficit. Aim for at least 8g protein per kg of body weight to preserve muscle.',
+    'lose': 'Moderate deficit. Safe and sustainable for consistent fat loss.',
+    'maintain': 'Your maintenance calories. Eat this to hold your current weight.',
+    'gain': 'Moderate surplus. Ideal for lean muscle building with minimal fat gain.',
+    'gain-fast': 'Higher surplus. Expect faster gains but some additional fat alongside muscle.'
+  };
+  document.getElementById('tdee-desc').textContent = descs[goal];
+
+  // Goal targets table
+  document.getElementById('gv-lose-fast').innerHTML = Math.round(tdee - 750).toLocaleString() + ' <span>kcal</span>';
+  document.getElementById('gv-lose').innerHTML = Math.round(tdee - 500).toLocaleString() + ' <span>kcal</span>';
+  document.getElementById('gv-maintain').innerHTML = Math.round(tdee).toLocaleString() + ' <span>kcal</span>';
+  document.getElementById('gv-gain').innerHTML = Math.round(tdee + 500).toLocaleString() + ' <span>kcal</span>';
+
+  // Highlight active goal row
+  ['lose-fast','lose','maintain','gain'].forEach(g => {
+    document.getElementById('gr-' + g).classList.remove('highlighted');
+  });
+  const map = { 'lose-fast': 'lose-fast', 'lose': 'lose', 'maintain': 'maintain', 'gain': 'gain', 'gain-fast': 'gain' };
+  if (map[goal]) document.getElementById('gr-' + map[goal]).classList.add('highlighted');
+
+  // MACROS based on goal calories
+  const targetCals = goalCalories;
+  const proteinG = Math.round(weightKg * 2);
+  const proteinKcal = proteinG * 4;
+  const fatKcal = Math.round(targetCals * 0.25);
+  const fatG = Math.round(fatKcal / 9);
+  const carbsKcal = Math.round(targetCals - proteinKcal - fatKcal);
+  const carbsG = Math.round(carbsKcal / 4);
+
+  document.getElementById('protein-g').textContent = proteinG;
+  document.getElementById('protein-kcal').textContent = proteinKcal.toLocaleString() + ' kcal';
+  document.getElementById('carbs-g').textContent = Math.max(0, carbsG);
+  document.getElementById('carbs-kcal').textContent = Math.max(0, carbsKcal).toLocaleString() + ' kcal';
+  document.getElementById('fat-g').textContent = fatG;
+  document.getElementById('fat-kcal').textContent = fatKcal.toLocaleString() + ' kcal';
+
+  // Macro bars
+  const total = proteinKcal + Math.max(0, carbsKcal) + fatKcal;
+  setTimeout(() => {
+    document.getElementById('protein-bar').style.width = Math.round(proteinKcal / total * 100) + '%';
+    document.getElementById('carbs-bar').style.width = Math.round(Math.max(0, carbsKcal) / total * 100) + '%';
+    document.getElementById('fat-bar').style.width = Math.round(fatKcal / total * 100) + '%';
+  }, 300);
+
+  // BMI
+  const heightM = heightCm / 100;
+  const bmi = weightKg / (heightM * heightM);
+  document.getElementById('bmi-val').textContent = bmi.toFixed(1);
+
+  let bmiCat, bmiColor, bmiPos;
+  if (bmi < 18.5) {
+    bmiCat = 'Underweight'; bmiColor = '#4fffb0'; bmiPos = Math.max(2, (bmi / 18.5) * 10);
+  } else if (bmi < 25) {
+    bmiCat = 'Normal Weight'; bmiColor = '#00d4ff'; bmiPos = 10 + ((bmi - 18.5) / 6.5) * 30;
+  } else if (bmi < 30) {
+    bmiCat = 'Overweight'; bmiColor = '#ffd166'; bmiPos = 40 + ((bmi - 25) / 5) * 30;
+  } else {
+    bmiCat = 'Obese'; bmiColor = '#ff6b6b'; bmiPos = Math.min(97, 70 + ((bmi - 30) / 10) * 27);
+  }
+
+  const bmiCatEl = document.getElementById('bmi-cat');
+  bmiCatEl.textContent = bmiCat;
+  bmiCatEl.style.background = bmiColor + '22';
+  bmiCatEl.style.color = bmiColor;
+  bmiCatEl.style.border = '1px solid ' + bmiColor + '44';
+  document.getElementById('bmi-val').style.color = bmiColor;
+
+  setTimeout(() => {
+    document.getElementById('bmi-marker').style.left = bmiPos + '%';
+  }, 400);
+
+  // Show results
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+  setTimeout(() => resultsEl.classList.add('visible'), 10);
+
+  // Scroll to results
+  setTimeout(() => {
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 200);
+}
+
+function toggleFaq(el) {
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f => f.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
+// Allow Enter key to calculate
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') calculate();
+});
+</script>
+</body>
+</html>
